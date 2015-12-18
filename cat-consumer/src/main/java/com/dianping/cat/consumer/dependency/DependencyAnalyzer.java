@@ -150,7 +150,37 @@ public class DependencyAnalyzer extends AbstractMessageAnalyzer<DependencyReport
 				updateDependencyInfo(serverReport, t, tree.getDomain(), "PigeonService");
 			}
 		}
+		// m_logger.info("processPigeonTransaction");
+		 
+		if("PigeonService".equals(type) || "Service".equals(type)){
+			String target = parseClientName(t);
+			String callType = "PigeonService";
+			
+			if (target != null) {
+				updateDependencyInfo(report, t, target, callType);
+				
+				DependencyReport serverReport = findOrCreateReport(target);
+
+				updateDependencyInfo(serverReport, t, tree.getDomain(), "PigeonCall");
+			}
+			
+		}
+		
 	}
+	
+	private String parseClientName(Transaction t) {
+		List<Message> messages = t.getChildren();
+
+		for (Message message : messages) {
+			if (message instanceof Event) {
+				if (message.getType().equals("PigeonService.app") || message.getType().equals("Service.app")) {
+					return message.getName();
+				}
+			}
+		}
+		return null;
+	}
+	
 
 	private void processSqlTransaction(DependencyReport report, Transaction t, String type) {
 		if ("SQL".equals(type)) {

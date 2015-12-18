@@ -53,7 +53,7 @@ public class ProductLineConfigManager implements Initializable, LogEnabled {
 		String duplicateDomains = "";
 
 		if (productLineConfig.needCheckDuplicate()) {
-			for (ProductLineConfig config : ProductLineConfig.values()) {
+			/*for (ProductLineConfig config : ProductLineConfig.values()) {
 				if (config.needCheckDuplicate()) {
 					for (ProductLine product : config.getCompany().getProductLines().values()) {
 						String productId = product.getId();
@@ -65,7 +65,19 @@ public class ProductLineConfigManager implements Initializable, LogEnabled {
 						}
 					}
 				}
+			}*/
+			//调整为同一类型监控下才限定不能再不同的产品线
+			for(ProductLine product : productLineConfig.getCompany().getProductLines().values()){
+				String productId = product.getId();
+				if (productId != null && !productId.equals(id)) {
+					for (Domain domain : product.getDomains().values()) {
+						domains.put(domain.getId(), productId);
+					}
+				}
 			}
+			
+			
+			
 			for (String domain : domainIds) {
 				if (domains.containsKey(domain)) {
 					duplicateDomains += domain + "[" + domains.get(domain) + "], ";

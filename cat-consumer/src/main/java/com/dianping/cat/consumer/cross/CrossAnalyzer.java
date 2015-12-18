@@ -62,6 +62,35 @@ public class CrossAnalyzer extends AbstractMessageAnalyzer<CrossReport> implemen
 
 		return info;
 	}
+	
+	public CrossInfo convertClientCrossInfo(String server, CrossInfo crossInfo) {
+		String localAddress = crossInfo.getLocalAddress();
+		String remoteAddress = crossInfo.getRemoteAddress();
+
+		int index = remoteAddress.indexOf(":");
+
+		if (index > 0) {
+			remoteAddress = remoteAddress.substring(0, index);
+		}
+
+		CrossInfo info = new CrossInfo();
+		info.setLocalAddress(remoteAddress);
+
+		String clientPort = crossInfo.getClientPort();
+
+		if (clientPort == null) {
+			info.setRemoteAddress(localAddress);
+		} else {
+			info.setRemoteAddress(localAddress + ":" + clientPort);
+		}
+		crossInfo.setRemoteRole("Pigeon.Server");
+		crossInfo.setDetailType("PigeonCall");
+		
+		
+		info.setApp(server);
+
+		return info;
+	}
 
 	@Override
 	public synchronized void doCheckpoint(boolean atEnd) {
@@ -193,7 +222,16 @@ public class CrossAnalyzer extends AbstractMessageAnalyzer<CrossReport> implemen
 
 					updateCrossReport(serverReport, t, serverCrossInfo);
 				}
-			} else {
+			}else if(m_serverConfigManager.isRpcServer(t.getType()) && !DEFAULT.equals(targetDomain)){
+				CrossInfo clientCrossInfo = convertClientCrossInfo(tree.getDomain(), crossInfo);
+				
+				if (clientCrossInfo != null) {
+					CrossReport clientReport = m_reportManager.getHourlyReport(getStartTime(), targetDomain, true);
+					updateCrossReport(clientReport, t, clientCrossInfo);
+				}
+				
+				
+			}else {
 				m_errorAppName++;
 			}
 		}
